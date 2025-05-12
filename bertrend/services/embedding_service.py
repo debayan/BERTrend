@@ -335,8 +335,9 @@ def _group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
     special_tokens = {
         "english": ["[CLS]", "[SEP]", "[PAD]"],
         "french": ["<s>", "</s>", "<pad>"],
+        "multilingual": ["[CLS]", "[SEP]", "[PAD]"]
     }
-    subword_prefix = {"english": "##", "french": "▁"}
+    subword_prefix = {"english": "##", "french": "▁", "multilingual": "##"}
 
     for token_id, token_embedding in tqdm(
         zip(token_ids, token_embeddings), desc="Grouping split tokens into whole words"
@@ -359,6 +360,14 @@ def _group_tokens(tokenizer, token_ids, token_embeddings, language="french"):
                 current_word = token[1:]
                 current_embedding = [embedding]
             elif language == "english" and not token.startswith(
+                subword_prefix[language]
+            ):
+                if current_word:
+                    grouped_tokens.append(current_word)
+                    grouped_embeddings.append(np.mean(current_embedding, axis=0))
+                current_word = token
+                current_embedding = [embedding]
+            elif language == "multilingual" and not token.startswith(
                 subword_prefix[language]
             ):
                 if current_word:

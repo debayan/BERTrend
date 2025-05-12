@@ -24,6 +24,7 @@ from bertrend.config.parameters import (
     LANGUAGES,
     ENGLISH_EMBEDDING_MODELS,
     FRENCH_EMBEDDING_MODELS,
+    MULTILINGUAL_EMBEDDING_MODELS,
     REPRESENTATION_MODELS,
     MMR_REPRESENTATION_MODEL,
 )
@@ -47,9 +48,15 @@ def display_local_embeddings():
         key="embedding_dtype",
         on_change=save_widget_state,
     )
-    embedding_models = (
-        ENGLISH_EMBEDDING_MODELS if language == "English" else FRENCH_EMBEDDING_MODELS
-    )
+
+    LANGUAGE_EMBEDDING_MODELS = {
+    "English": ENGLISH_EMBEDDING_MODELS,
+    "French": FRENCH_EMBEDDING_MODELS,
+    "Multilingual": MULTILINGUAL_EMBEDDING_MODELS,  # Add new languages here
+   }
+
+    embedding_models = LANGUAGE_EMBEDDING_MODELS.get(language)
+    
     st.selectbox(
         "Embedding Model",
         options=embedding_models,

@@ -50,6 +50,10 @@ FRENCH_EMBEDDING_MODELS = [
     "antoinelouis/biencoder-distilcamembert-mmarcoFR",
 ]
 
+MULTILINGUAL_EMBEDDING_MODELS = [
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+]
+
 # MODEL REPRESENTATIONS
 MMR_REPRESENTATION_MODEL = "MaximalMarginalRelevance"
 KEYBERTINSPIRED_REPRESENTATION_MODEL = "KeyBERTInspired"
@@ -57,7 +61,7 @@ OPENAI_REPRESENTATION_MODEL = "OpenAI"
 
 # BERTopic Hyperparameters
 BERTOPIC_SERIALIZATION = "safetensors"  # or pickle
-LANGUAGES = ["French", "English"]
+LANGUAGES = ["French", "English", "Multilingual"]
 REPRESENTATION_MODELS = [
     MMR_REPRESENTATION_MODEL,
     KEYBERTINSPIRED_REPRESENTATION_MODEL,
