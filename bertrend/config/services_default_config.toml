@@ -12,8 +12,8 @@ use_local = true
 model_name = "OrdalieTech/Solon-embeddings-large-0.1"
 url = "https://10.132.5.44:6464"
 embedding_dtypes = ["float32", "float16", "bfloat16"]
-embedding_batch_size = 2048
-embedding_max_seq_length = 512
+embedding_batch_size = 128
+embedding_max_seq_length = 256
 
 # LLM service parameters
 [llm_service]
