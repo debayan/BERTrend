@@ -190,7 +190,13 @@ class EmbeddingService(BaseEmbedder):
                 show_progress_bar=False,
                 output_value=None,  # to get all output values, not only sentence embeddings
             )
-            embeddings.append(batch_embeddings)
+            # Extract and move to CPU early
+            embeddings.append([
+                item["sentence_embedding"].cpu().numpy() for item in batch_embeddings
+            ])
+
+            del batch_embeddings
+            torch.cuda.empty_cache()
 
         # Concatenate all batch embeddings
         all_embeddings = np.concatenate(embeddings, axis=0)
