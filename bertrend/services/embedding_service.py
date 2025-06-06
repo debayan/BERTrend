@@ -177,52 +177,45 @@ class EmbeddingService(BaseEmbedder):
         # Calculate the number of batches
         num_batches = (len(texts) + batch_size - 1) // batch_size
 
-        # Initialize an empty list to store embeddings
-        embeddings = []
-
-        # Process texts in batches
+        all_sentence_embeddings = []
+        all_token_embeddings = []
+        all_input_ids = []
+    
         for i in tqdm(range(num_batches), desc="Processing batches"):
             start_idx = i * batch_size
             end_idx = min(start_idx + batch_size, len(texts))
             batch_texts = texts[start_idx:end_idx]
+    
             batch_embeddings = self.embedding_model.encode(
                 batch_texts,
                 show_progress_bar=False,
-                output_value=None,  # to get all output values, not only sentence embeddings
+                output_value=None,
             )
-            # Extract and move to CPU early
-            embeddings.append([
-                item["sentence_embedding"].cpu().numpy() for item in batch_embeddings
-            ])
-
+    
+            for item in batch_embeddings:
+                all_sentence_embeddings.append(item["sentence_embedding"].detach().cpu())
+                all_token_embeddings.append(item["token_embeddings"].detach().cpu())
+                all_input_ids.append(item["input_ids"].detach().cpu())
+    
+            # Free GPU memory after each batch
             del batch_embeddings
             torch.cuda.empty_cache()
-
-        # Concatenate all batch embeddings
-        all_embeddings = np.concatenate(embeddings, axis=0)
-        logger.success(f"Embedded {len(texts)} documents in {num_batches} batches")
-
-        embeddings = [
-            item["sentence_embedding"].detach().cpu() for item in all_embeddings
-        ]
-        embeddings = torch.stack(embeddings)
-        embeddings = embeddings.numpy()
-
-        token_embeddings = [
-            item["token_embeddings"].detach().cpu() for item in all_embeddings
-        ]
-        token_ids = [item["input_ids"].detach().cpu() for item in all_embeddings]
-
-        token_embeddings = _convert_to_numpy(token_embeddings)
-        token_ids = _convert_to_numpy(token_ids, type="token_id")
-
+    
+        # Combine all sentence embeddings into one numpy array
+        embeddings_tensor = torch.stack(all_sentence_embeddings)
+        embeddings = embeddings_tensor.numpy()
+    
+        token_embeddings = _convert_to_numpy(all_token_embeddings)
+        token_ids = _convert_to_numpy(all_input_ids, type="token_id")
+    
         tokenizer = self.embedding_model._first_module().tokenizer
-
+    
         token_strings, token_embeddings = _group_tokens(
             tokenizer, token_ids, token_embeddings, language="french"
         )
-
+    
         return embeddings, token_strings, token_embeddings
+
 
     def _remote_embed_documents(
         self,
