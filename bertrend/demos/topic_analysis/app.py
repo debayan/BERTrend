@@ -26,7 +26,8 @@ LAYOUT = "wide"
 
 
 # Set locale for French date names
-locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+#locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+locale.setlocale(locale.LC_TIME, "en_US.utf8")
 
 
 def define_pages():
