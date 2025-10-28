@@ -13,7 +13,8 @@ import plotly.graph_objects as go
 from urllib.parse import urlparse
 
 from bertrend.BERTopicModel import BERTopicModel
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.llama3_client import Llama3Client
+from bertrend import LLM_CONFIG
 from bertrend.services.embedding_service import EmbeddingService
 from bertrend_apps.exploration.curebot.prompts import (
     TOPIC_DESCRIPTION_SYSTEM_PROMPT,
@@ -130,7 +131,11 @@ def get_improved_topic_description(
 ) -> list[str]:
     """Get improved topic description using LLM."""
     # Get llm client
-    llm_client = OpenAI_Client()
+    llm_client = Llama3Client(
+        api_key=LLM_CONFIG["api_key"],
+        endpoint=LLM_CONFIG["endpoint"],
+        model=LLM_CONFIG["model"],
+    )
 
     # List of improved topics description
     improved_descriptions = []
@@ -221,7 +226,11 @@ def create_newsletter(
                 axis=1,
             )
         )
-        llm_client = OpenAI_Client()
+        llm_client = Llama3Client(
+            api_key=LLM_CONFIG["api_key"],
+            endpoint=LLM_CONFIG["endpoint"],
+            model=LLM_CONFIG["model"],
+        )
         response = llm_client.generate(
             user_prompt=user_prompt,
             system_prompt=TOPIC_SUMMARY_SYSTEM_PROMPT,

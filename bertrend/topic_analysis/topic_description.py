@@ -7,7 +7,7 @@ from bertopic import BERTopic
 from loguru import logger
 
 from bertrend import LLM_CONFIG
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.llama3_client import Llama3Client
 from bertrend.topic_analysis.data_structure import TopicDescription
 from bertrend.topic_analysis.prompts import TOPIC_DESCRIPTION_PROMPT
 
@@ -21,7 +21,7 @@ def get_topic_description(
     # Prepare the prompt
     prompt = TOPIC_DESCRIPTION_PROMPT[language_code]
     try:
-        client = OpenAI_Client(
+        client = Llama3Client(
             api_key=LLM_CONFIG["api_key"],
             endpoint=LLM_CONFIG["endpoint"],
             model=LLM_CONFIG["model"],

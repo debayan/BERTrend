@@ -22,7 +22,7 @@ from umap import UMAP
 from sentence_transformers import SentenceTransformer
 
 from bertrend import load_toml_config, BERTOPIC_DEFAULT_CONFIG_PATH, LLM_CONFIG
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.llama3_client import Llama3Client
 from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
 from bertrend.config.parameters import (
     STOPWORDS,
@@ -175,7 +175,7 @@ class BERTopicModel:
 
     def _initialize_openai_representation(self):
         return OpenAI(
-            client=OpenAI_Client(
+            client=Llama3Client(
                 api_key=LLM_CONFIG["api_key"],
                 endpoint=LLM_CONFIG["endpoint"],
                 model=LLM_CONFIG["model"],

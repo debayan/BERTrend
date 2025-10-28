@@ -14,7 +14,7 @@ import tldextract
 from loguru import logger
 
 from bertrend import LLM_CONFIG
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.llama3_client import Llama3Client
 from bertrend.services.summary.chatgpt_summarizer import GPTSummarizer
 from bertrend.topic_analysis.representative_docs import get_most_representative_docs
 from bertrend.llm_utils.prompts import (
@@ -77,7 +77,7 @@ def generate_newsletter(
     logger.debug("Generating newsletters...")
     if not openai_model_name:
         openai_model_name = LLM_CONFIG["model"]
-    openai_api = OpenAI_Client(
+    openai_api = Llama3Client(
         api_key=LLM_CONFIG["api_key"],
         endpoint=LLM_CONFIG["endpoint"],
         model=openai_model_name,

@@ -13,7 +13,8 @@ from sentence_transformers import SentenceTransformer, util
 from sentence_transformers.models import Transformer, Pooling
 from torch import Tensor
 
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend import LLM_CONFIG
+from bertrend.llm_utils.llama3_client import Llama3Client
 from bertrend.services.summary.lexrank import degree_centrality_scores
 from bertrend.services.summary.prompts import (
     FR_SYSTEM_SUMMARY_SENTENCES,
@@ -342,7 +343,7 @@ class EnhancedExtractiveSummarizer(ExtractiveSummarizer):
         model_name=DEFAULT_SUMMARIZER_MODEL,
     ):
         super().__init__(model_name=model_name)
-        self.api = OpenAI_Client(api_key=api_key, endpoint=endpoint)
+        self.api = Llama3Client(api_key=api_key, endpoint=endpoint, model=LLM_CONFIG["model"])
 
     def generate_summary(
         self,

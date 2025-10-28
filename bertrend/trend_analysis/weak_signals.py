@@ -10,7 +10,7 @@ from bertopic import BERTopic
 from loguru import logger
 from pandas import Timestamp
 
-from bertrend.llm_utils.openai_client import OpenAI_Client
+from bertrend.llm_utils.llama3_client import Llama3Client
 from bertrend import LLM_CONFIG
 from bertrend.trend_analysis.data_structure import TopicSummaryList, SignalAnalysis
 from bertrend.trend_analysis.prompts import get_prompt, fill_html_template
@@ -372,7 +372,7 @@ def analyze_signal(
         language = bertrend.topic_model.config["global"]["language"]
 
         try:
-            openai_client = OpenAI_Client(
+            llama3_client = Llama3Client(
                 api_key=LLM_CONFIG["api_key"],
                 endpoint=LLM_CONFIG["endpoint"],
                 model=LLM_CONFIG["model"],
@@ -386,7 +386,7 @@ def analyze_signal(
                 topic_number=topic_number,
                 content_summary=content_summary,
             )
-            summaries = openai_client.parse(
+            summaries = llama3_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=summary_prompt,
                 temperature=LLM_CONFIG["temperature"],
@@ -406,7 +406,7 @@ def analyze_signal(
                 prompt_type="weak_signal",
                 summary_from_first_prompt=summaries.model_dump_json(),
             )
-            weak_signal_analysis = openai_client.parse(
+            weak_signal_analysis = llama3_client.parse(
                 system_prompt=LLM_CONFIG["system_prompt"],
                 user_prompt=weak_signal_prompt,
                 temperature=LLM_CONFIG["temperature"],
