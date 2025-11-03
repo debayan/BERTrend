@@ -3,10 +3,11 @@
 #  SPDX-License-Identifier: MPL-2.0
 #  This file is part of BERTrend.
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TopicSummary(BaseModel):
+    model_config = ConfigDict(extra="allow")
     """Description of topic during a time period"""
 
     # Title of the topic
@@ -22,6 +23,7 @@ class TopicSummary(BaseModel):
 
 
 class TopicSummaryList(BaseModel):
+    model_config = ConfigDict(extra="allow")
     """Description of topic during a set of time period"""
 
     topic_summary_by_time_period: list[TopicSummary]
@@ -34,8 +36,8 @@ class PotentialImplications(BaseModel):
     - Analyze possible ripple effects and second-order consequences.
     """
 
-    long_term_implications: list[str]
-    short_term_implications: list[str]
+    long_term_implications: list[str] = Field(default_factory=list)
+    short_term_implications: list[str] = Field(default_factory=list)
 
 
 class EvolutionScenario(BaseModel):
@@ -45,34 +47,42 @@ class EvolutionScenario(BaseModel):
     - Explore both optimistic and pessimistic scenarios.
     """
 
-    optimistic_scenario_description: str
-    optimistic_scenario_points: list[str]
-    pessimistic_scenario_description: str
-    pessimistic_scenario_points: list[str]
+    optimistic_scenario_description: str = ""
+    optimistic_scenario_points: list[str] = Field(default_factory=list)
+    pessimistic_scenario_description: str = ""
+    pessimistic_scenario_points: list[str] = Field(default_factory=list)
 
 
 class TopicInterconnexions(BaseModel):
     """Interconnections and Synergies"""
 
     #  how this signal might interact with other current trends or emerging phenomena.
-    interconnexions: list[str]
+    interconnexions: list[str] = Field(default_factory=list)
     #  potential synergies or conflicts with existing systems or paradigms.
-    ripple_effects: list[str]
+    ripple_effects: list[str] = Field(default_factory=list)
 
 
 class Drivers(BaseModel):
     """Drivers and inhibitors"""
 
     # Factors that could accelerate or amplify a signal
-    drivers: list[str]
+    drivers: list[str] = Field(default_factory=list)
     # Potential barriers or resistances that might hinder its development.
-    inhibitors: list[str]
+    inhibitors: list[str] = Field(default_factory=list)
 
 
 class SignalAnalysis(BaseModel):
     """Detailed analysis of topic evolution at a given time"""
 
-    potential_implications: PotentialImplications
-    evolution_scenario: EvolutionScenario
-    topic_interconnexions: TopicInterconnexions
-    drivers_inhibitors: Drivers
+    model_config = ConfigDict(extra="allow")
+
+    potential_implications: PotentialImplications = Field(
+        default_factory=PotentialImplications
+    )
+    evolution_scenario: EvolutionScenario = Field(
+        default_factory=EvolutionScenario
+    )
+    topic_interconnexions: TopicInterconnexions = Field(
+        default_factory=TopicInterconnexions
+    )
+    drivers_inhibitors: Drivers = Field(default_factory=Drivers)

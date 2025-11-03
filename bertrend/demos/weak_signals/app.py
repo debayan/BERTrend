@@ -420,8 +420,15 @@ def analysis_page():
                     try:
                         display_signal_analysis(topic_number)
                     except Exception as e:
+                        from bertrend.demos.weak_signals.messages import (
+                            SIGNAL_ANALYSIS_ERROR,
+                        )
+
+                        logger.error(
+                            f"Error in signal analysis for topic {topic_number}: {str(e)}"
+                        )
                         st.error(
-                            f"Error while trying to generate signal summary: {e}",
+                            f"{SIGNAL_ANALYSIS_ERROR} Error: {str(e)}",
                             icon=ERROR_ICON,
                         )
 

@@ -26,6 +26,12 @@ Leverage your knowledge and analytical skills to provide an in-depth analysis of
 
 Utilisez vos connaissances et compétences analytiques pour fournir une analyse approfondie de l'impact potentiel et de l'évolution de ce signal :
 """,
+    "de": """Als Elite-Strategieprognose-Analyst mit umfangreicher Expertise in verschiedenen Bereichen und Branchen ist es Ihre Aufgabe, eine umfassende Bewertung eines potenziellen Signals durchzuführen, das aus der folgenden Themenzusammenfassung abgeleitet wurde:
+
+{summary_from_first_prompt}
+
+Nutzen Sie Ihr Wissen und Ihre analytischen Fähigkeiten, um eine tiefgreifende Analyse der potenziellen Auswirkungen und Entwicklung dieses Signals zu liefern:
+""",
 }
 
 SIGNAL_INSTRUCTIONS = {
@@ -51,6 +57,29 @@ SIGNAL_INSTRUCTIONS = {
 Your analysis should be thorough and nuanced, going beyond surface-level observations. Draw upon your expertise to provide insights that capture the complexity and potential significance of this signal. Don't hesitate to make well-reasoned predictions about its potential trajectory and impact.
 
 Focus on providing a clear, insightful, and actionable analysis that can inform strategic decision-making and future planning.
+
+Return ONLY valid JSON using the following canonical schema keys (keys must remain in English, values in the user language are fine). If information is missing, return empty lists for those fields. Do not add extra fields or prose outside JSON.
+
+{
+  "potential_implications": {
+    "short_term_implications": ["..."],
+    "long_term_implications": ["..."]
+  },
+  "evolution_scenario": {
+    "optimistic_scenario_description": "...",
+    "optimistic_scenario_points": ["..."],
+    "pessimistic_scenario_description": "...",
+    "pessimistic_scenario_points": ["..."]
+  },
+  "topic_interconnexions": {
+    "interconnexions": ["..."],
+    "ripple_effects": ["..."]
+  },
+  "drivers_inhibitors": {
+    "drivers": ["..."],
+    "inhibitors": ["..."]
+  }
+}
 """,
     "fr": """
 1. Analyse de l'Impact Potentiel :
@@ -74,6 +103,75 @@ Focus on providing a clear, insightful, and actionable analysis that can inform 
 Votre analyse doit être approfondie et nuancée, allant au-delà des observations superficielles. Appuyez-vous sur votre expertise pour fournir des insights qui capturent la complexité et l'importance potentielle de ce signal. N'hésitez pas à faire des prédictions bien raisonnées sur sa trajectoire et son impact potentiels.
 
 Concentrez-vous sur la fourniture d'une analyse claire, perspicace et exploitable qui peut éclairer la prise de décision stratégique et la planification future.
+
+Retournez UNIQUEMENT un JSON valide utilisant les clés canoniques suivantes (les clés doivent rester en anglais, les valeurs peuvent être en français). Si une information manque, retournez des listes vides pour ces champs. N'ajoutez aucun champ supplémentaire ni de texte hors JSON.
+
+{
+  "potential_implications": {
+    "short_term_implications": ["..."],
+    "long_term_implications": ["..."]
+  },
+  "evolution_scenario": {
+    "optimistic_scenario_description": "...",
+    "optimistic_scenario_points": ["..."],
+    "pessimistic_scenario_description": "...",
+    "pessimistic_scenario_points": ["..."]
+  },
+  "topic_interconnexions": {
+    "interconnexions": ["..."],
+    "ripple_effects": ["..."]
+  },
+  "drivers_inhibitors": {
+    "drivers": ["..."],
+    "inhibitors": ["..."]
+  }
+}
+""",
+    "de": """
+1. Potenzielle Auswirkungsanalyse:
+   - Untersuchen Sie die potenziellen Auswirkungen dieses Signals auf verschiedene Sektoren, Branchen und gesellschaftliche Aspekte.
+   - Berücksichtigen Sie sowohl kurzfristige als auch langfristige Implikationen.
+   - Analysieren Sie mögliche Kaskadeneffekte und Folgen zweiter Ordnung.
+
+2. Entwicklungsszenarien:
+   - Beschreiben Sie potenzielle Wege, wie sich dieses Signal entwickeln oder in der Zukunft manifestieren könnte.
+   - Berücksichtigen Sie verschiedene Faktoren, die seine Trajektorie beeinflussen könnten.
+   - Erkunden Sie sowohl optimistische als auch pessimistische Szenarien.
+
+3. Interkonnexionen und Synergien:
+   - Identifizieren Sie, wie dieses Signal mit anderen aktuellen Trends oder aufkommenden Phänomenen interagieren könnte.
+   - Diskutieren Sie potenzielle Synergien oder Konflikte mit bestehenden Systemen oder Paradigmen.
+
+4. Treiber und Inhibitoren:
+   - Analysieren Sie Faktoren, die dieses Signal beschleunigen oder verstärken könnten.
+   - Untersuchen Sie potenzielle Barrieren oder Widerstände, die seine Entwicklung behindern könnten.
+
+Ihre Analyse sollte gründlich und nuanciert sein und über oberflächliche Beobachtungen hinausgehen. Stützen Sie sich auf Ihre Expertise, um Erkenntnisse zu liefern, die die Komplexität und potenzielle Bedeutung dieses Signals erfassen. Zögern Sie nicht, gut begründete Vorhersagen über seine potenzielle Trajektorie und Auswirkungen zu machen.
+
+Konzentrieren Sie sich auf die Bereitstellung einer klaren, einsichtsvollen und umsetzbaren Analyse, die strategische Entscheidungsfindung und zukünftige Planung informieren kann.
+
+Geben Sie NUR gültiges JSON zurück und verwenden Sie die folgenden kanonischen Schlüssel (Schlüssel bleiben auf Englisch, Werte können auf Deutsch sein). Falls Informationen fehlen, geben Sie leere Listen für diese Felder zurück. Fügen Sie keine zusätzlichen Felder oder Text außerhalb des JSON hinzu.
+
+{
+  "potential_implications": {
+    "short_term_implications": ["..."],
+    "long_term_implications": ["..."]
+  },
+  "evolution_scenario": {
+    "optimistic_scenario_description": "...",
+    "optimistic_scenario_points": ["..."],
+    "pessimistic_scenario_description": "...",
+    "pessimistic_scenario_points": ["..."]
+  },
+  "topic_interconnexions": {
+    "interconnexions": ["..."],
+    "ripple_effects": ["..."]
+  },
+  "drivers_inhibitors": {
+    "drivers": ["..."],
+    "inhibitors": ["..."]
+  }
+}
 """,
 }
 
@@ -146,6 +244,40 @@ Pour tous les timestamps suivants :
 
 Fournissez votre analyse en utilisant uniquement ce format, basé uniquement sur les informations données. N'incluez pas de sections de résumé ou d'aperçu supplémentaires au-delà de ce qui est spécifié dans cette structure.
 """,
+    "de": """
+Als Expertenanalyst, der sich auf Trendanalyse und strategische Prognose spezialisiert hat, ist es Ihre Aufgabe, eine umfassende Entwicklungszusammenfassung von Thema {topic_number} zu erstellen. Verwenden Sie nur die unten angegebenen Informationen:
+
+{content_summary}
+
+Strukturieren Sie Ihre Analyse wie folgt:
+
+Für den ersten Zeitstempel:
+
+## [Prägnanter aber wirkungsvoller Titel, der das Wesen des Themas zu diesem Zeitpunkt erfasst]
+### Datum: [Relevantes Datum oder Zeitrahmen - Format %Y-%m-%d]
+### Wichtige Entwicklungen
+- [Aufzählungspunkt, der eine wichtige Entwicklung oder einen Trend zusammenfasst]
+- [Zusätzliche Aufzählungspunkte nach Bedarf]
+
+### Analyse
+[2-3 Sätze, die tiefere Einblicke in die Entwicklungen, ihre potenziellen Auswirkungen und ihre Bedeutung im breiteren Kontext der Entwicklung des Themas bieten]
+
+Für alle nachfolgenden Zeitstempel:
+
+## [Prägnanter aber wirkungsvoller Titel, der das Wesen des Themas zu diesem Zeitpunkt erfasst]
+### Datum: [Relevantes Datum oder Zeitrahmen - Format %Y-%m-%d]
+### Wichtige Entwicklungen
+- [Aufzählungspunkt, der eine wichtige Entwicklung oder einen Trend zusammenfasst]
+- [Zusätzliche Aufzählungspunkte nach Bedarf]
+
+### Analyse
+[2-3 Sätze, die tiefere Einblicke in die Entwicklungen, ihre potenziellen Auswirkungen und ihre Bedeutung im breiteren Kontext der Entwicklung des Themas bieten]
+
+### Was ist neu
+[1-2 Sätze, die hervorheben, wie sich diese Periode von der vorherigen unterscheidet, mit Fokus auf neue Elemente oder signifikante Änderungen]
+
+Geben Sie Ihre Analyse nur in diesem Format basierend ausschließlich auf den gegebenen Informationen. Fügen Sie keine zusätzlichen Zusammenfassungs- oder Übersichtsabschnitte über das hinaus hinzu, was in dieser Struktur spezifiziert ist.
+""",
 }
 
 
@@ -156,7 +288,16 @@ def get_prompt(
     content_summary: str = None,
     summary_from_first_prompt: str = None,
 ):
-    lang = "en" if language == "English" else "fr"
+    # Map language to prompt language code
+    if language == "English":
+        lang = "en"
+    elif language == "French":
+        lang = "fr"
+    elif language == "German":
+        lang = "de"
+    else:
+        # Default to German for multilingual or unknown languages
+        lang = "de"
 
     if prompt_type == "weak_signal":
         prompt = (
@@ -190,7 +331,7 @@ def save_html_output(html_output, output_file="signal_llm.html"):
 def fill_html_template(
     topic_summary_list: TopicSummaryList,
     signal_analysis: SignalAnalysis,
-    language: str = "fr",
+    language: str = "de",
 ) -> str:
     """Fill the HTML template with appropriate data"""
     # Setup Jinja2 environment
@@ -198,11 +339,19 @@ def fill_html_template(
     env = Environment(
         loader=FileSystemLoader(template_dir),
     )
-    template = env.get_template(
-        "signal_llm_template_en.html"
-        if language == "en"
-        else "signal_llm_template_fr.html"
-    )
+    
+    # Select template based on language
+    if language == "en":
+        template_name = "signal_llm_template_en.html"
+    elif language == "fr":
+        template_name = "signal_llm_template_fr.html"
+    elif language == "de":
+        template_name = "signal_llm_template_de.html"
+    else:
+        # Default to German template for multilingual or unknown languages
+        template_name = "signal_llm_template_de.html"
+    
+    template = env.get_template(template_name)
 
     # Sort the list by date from most recent to least recent
     try:

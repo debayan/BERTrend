@@ -26,8 +26,8 @@ embedding_max_seq_length = 256
 # - models deployed on Azure cloud
 # - custom Llama3 API deployment
 api_key = "llm-chat-user"
-endpoint = "https://llm-chat.skynet.coypu.org/generate_text"
+endpoint = "https://llm-chat.skynet.coypu.org/generate_response"
 model = "meta-llama/Meta-Llama-3-8B-Instruct"
 temperature = 0.1
 max_output_tokens = 2048
-system_prompt = "You are a helpful assistant, skilled in detailing topic evolution over time for the detection of emerging trends and signals."
+system_prompt = "Sie sind ein hilfreicher Assistent, der sich auf die detaillierte Beschreibung der Themenentwicklung über die Zeit zur Erkennung aufkommender Trends und Signale spezialisiert hat."

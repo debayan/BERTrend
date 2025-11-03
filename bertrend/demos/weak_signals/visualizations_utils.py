@@ -6,6 +6,7 @@
 import pandas as pd
 import streamlit as st
 from bertopic import BERTopic
+from loguru import logger
 from pandas import Timestamp
 from plotly import graph_objects as go
 
@@ -16,6 +17,7 @@ from bertrend.demos.demos_utils.icons import (
     STRONG_SIGNAL_ICON,
     WEAK_SIGNAL_ICON,
     NOISE_ICON,
+    ERROR_ICON,
 )
 from bertrend.demos.demos_utils.state_utils import SessionStateManager
 from bertrend.config.parameters import (
@@ -25,6 +27,10 @@ from bertrend.config.parameters import (
     CUMULATIVE_MERGED_TOPIC_COUNTS_FILE,
 )
 from bertrend.trend_analysis.prompts import fill_html_template
+from bertrend.demos.weak_signals.messages import (
+    NO_TOPIC_DATA_WARNING,
+    SIGNAL_ANALYSIS_ERROR,
+)
 from bertrend.trend_analysis.visualizations import (
     create_sankey_diagram_plotly,
     plot_newly_emerged_topics,
@@ -347,12 +353,29 @@ def display_signal_analysis(topic_number: int):
             SessionStateManager.get("current_date"),
         )
 
-        formatted_html = fill_html_template(
-            summaries, weak_signal_analysis, SessionStateManager.get("language", "fr")
-        )
+        # Check if data is empty (no summaries available)
+        if not summaries or not summaries.topic_summary_by_time_period:
+            st.error(
+                NO_TOPIC_DATA_WARNING.format(topic_number=topic_number),
+                icon=ERROR_ICON,
+            )
+            return
 
-        # Display the HTML content
-        st.html(formatted_html)
+        try:
+            formatted_html = fill_html_template(
+                summaries,
+                weak_signal_analysis,
+                SessionStateManager.get("language", "fr"),
+            )
+
+            # Display the HTML content
+            st.html(formatted_html)
+        except Exception as e:
+            logger.error(f"Error generating HTML template: {str(e)}")
+            st.error(
+                f"{SIGNAL_ANALYSIS_ERROR} Error: {str(e)}",
+                icon=ERROR_ICON,
+            )
 
 
 def retrieve_topic_counts(topic_models: dict[pd.Timestamp, BERTopic]) -> None:

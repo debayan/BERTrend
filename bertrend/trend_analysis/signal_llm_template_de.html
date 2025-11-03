@@ -1,0 +1,181 @@
+<!--
+  ~ Copyright (c) 2024, RTE (https://www.rte-france.com)
+  ~ See AUTHORS.txt
+  ~ SPDX-License-Identifier: MPL-2.0
+  ~ This file is part of BERTrend.
+  -->
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard für Themenanalyse</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .column {
+            flex: 1;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .event, .section {
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .event h3, .section h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        .whats-new {
+            background-color: #fffde7;
+            border-left: 4px solid #fbc02d;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        ul {
+            padding-left: 20px;
+            margin: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .scenario {
+            border-left: 4px solid;
+            padding-left: 10px;
+            margin-bottom: 15px;
+        }
+        .optimistic {
+            border-color: #2ecc71;
+        }
+        .pessimistic {
+            border-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="column">
+            <h2>Themenentwicklung</h2>
+            {% for summary in topic_summary_list.topic_summary_by_time_period %}
+            <div class="event">
+                <h3>{{ summary.date }}: {{ summary.title }}</h3>
+                <p>{{ summary.description }}</p>
+                <div class="whats-new">
+                    <strong>Neuigkeit:</strong> {{ summary.novelty }}
+                </div>
+                {% if summary.key_developments %}
+                <div class="developments">
+                    <strong>Wichtige Entwicklungen:</strong>
+                    <ul>
+                        {% for development in summary.key_developments %}
+                        <li>{{ development }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <h2>Entwicklungsszenarien</h2>
+            <div class="scenario optimistic">
+                <h3>Optimistisches Szenario</h3>
+                <p>{{ signal_analysis.evolution_scenario.optimistic_scenario_description }}</p>
+                <ul>
+                    {% for point in signal_analysis.evolution_scenario.optimistic_scenario_points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="scenario pessimistic">
+                <h3>Pessimistisches Szenario</h3>
+                <p>{{ signal_analysis.evolution_scenario.pessimistic_scenario_description }}</p>
+                <ul>
+                    {% for point in signal_analysis.evolution_scenario.pessimistic_scenario_points %}
+                    <li>{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="column">
+            <h2>Themenanalyse</h2>
+            <div class="grid">
+                <div class="section">
+                    <h3>Kurzfristige Auswirkungen</h3>
+                    <ul>
+                        {% for implication in signal_analysis.potential_implications.short_term_implications %}
+                        <li>{{ implication }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section">
+                    <h3>Langfristige Auswirkungen</h3>
+                    <ul>
+                        {% for implication in signal_analysis.potential_implications.long_term_implications %}
+                        <li>{{ implication }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section">
+                    <h3>Kaskadeneffekte</h3>
+                    <ul>
+                        {% for effect in signal_analysis.topic_interconnexions.ripple_effects %}
+                        <li>{{ effect }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section">
+                    <h3>Interkonnexionen</h3>
+                    <ul>
+                        {% for interconnexion in signal_analysis.topic_interconnexions.interconnexions %}
+                        <li>{{ interconnexion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section">
+                    <h3>Treiber</h3>
+                    <ul>
+                        {% for driver in signal_analysis.drivers_inhibitors.drivers %}
+                        <li>{{ driver }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="section">
+                    <h3>Inhibitoren</h3>
+                    <ul>
+                        {% for inhibitor in signal_analysis.drivers_inhibitors.inhibitors %}
+                        <li>{{ inhibitor }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -30,3 +30,8 @@ TOPIC_NOT_FOUND_WARNING = (
 )
 NO_GRANULARITY_WARNING = "Granularity value not found."
 HTML_GENERATION_FAILED_WARNING = "HTML generation failed. Displaying markdown instead."
+NO_TOPIC_DATA_WARNING = (
+    "No data available for topic {topic_number} within the specified date range. "
+    "Please select a different topic or adjust the date range."
+)
+SIGNAL_ANALYSIS_ERROR = "An error occurred while generating the signal analysis. Please check the logs for details."
