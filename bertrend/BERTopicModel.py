@@ -27,6 +27,7 @@ from bertrend.llm_utils.prompts import BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROM
 from bertrend.config.parameters import (
     STOPWORDS,
     ENGLISH_STOPWORDS,
+    MULTILINGUAL_STOPWORDS,  # CHANGED: Added import for multilingual stopwords
     KEYBERT_TOP_N_WORDS,
     KEYBERT_NR_REPR_DOCS,
     KEYBERT_NR_CANDIDATE_WORDS,
@@ -150,12 +151,19 @@ class BERTopicModel:
             )
 
         # Load stop words list
+        # CHANGED: Updated to handle "multilingual" language option
+        # This affects vectorizer behavior: stopwords are used to filter common words during tokenization.
+        # For multilingual text, we use combined English and French stopwords to handle both languages.
         if self.config["vectorizer_model"].get("stop_words"):
-            stop_words = (
-                STOPWORDS
-                if self.config["global"]["language"] == "French"
-                else ENGLISH_STOPWORDS
-            )
+            language = self.config["global"]["language"]
+            if language == "French":
+                stop_words = STOPWORDS
+            elif language == "multilingual":
+                # Use combined multilingual stopwords for multilingual text processing
+                stop_words = MULTILINGUAL_STOPWORDS
+            else:
+                # Default to English stopwords for English or other languages
+                stop_words = ENGLISH_STOPWORDS
             self.config["vectorizer_model"]["stop_words"] = stop_words
 
         # BERTopic needs a "None" instead of an empty list, otherwise it'll attempt zeroshot topic modeling on an empty list
@@ -182,10 +190,13 @@ class BERTopicModel:
             ).llm_client,
             model=LLM_CONFIG["model"],
             nr_docs=OPENAI_NR_DOCS,
+            # CHANGED: Updated to handle "multilingual" language option
+            # This affects OpenAI representation model: determines the prompt language for topic representation.
+            # For multilingual, we use None (English default) since there's no multilingual-specific prompt.
             prompt=(
                 BERTOPIC_FRENCH_TOPIC_REPRESENTATION_PROMPT
                 if self.config["global"]["language"] == "French"
-                else None
+                else None  # Use default English prompt for multilingual, English, or other languages
             ),
             chat=True,
         )

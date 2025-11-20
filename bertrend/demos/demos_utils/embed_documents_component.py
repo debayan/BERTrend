@@ -20,7 +20,11 @@ def display_embed_documents_component():
         with st.spinner("Embedding documents..."):
             embedding_dtype = SessionStateManager.get("embedding_dtype")
             embedding_model_name = SessionStateManager.get("embedding_model_name")
-            if SessionStateManager.get("embedding_service_type", "remote") == "local":
+            # CHANGED: Default embedding service type fallback changed from "remote" to "local"
+            # This affects backend behavior when determining which embedding service to use
+            # if embedding_service_type is not set in session state.
+            # This ensures consistency with the new default embedding service setting in the UI.
+            if SessionStateManager.get("embedding_service_type", "local") == "local":
                 embedding_service = EmbeddingService(
                     local=True,
                     model_name=embedding_model_name,

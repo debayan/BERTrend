@@ -36,9 +36,14 @@ def display_local_embeddings():
     """UI settings for local embedding service"""
     register_multiple_widget("language", "embedding_dtype", "embedding_model_name")
 
+    # CHANGED: Default language changed from "French" (index 0) to "Multilingual" (index 2)
+    # This affects the user-facing default in the Weak Signals demo sidebar.
+    # When users first open the demo with local embeddings selected, "Multilingual" will be pre-selected.
+    # LANGUAGES = ["French", "English", "Multilingual"], so index=2 selects "Multilingual"
     language = st.selectbox(
         "Select Language",
         LANGUAGES,
+        index=2,  # Default to "Multilingual" (index 2 in LANGUAGES list)
         key="language",
         on_change=_on_language_change,
     )
@@ -89,8 +94,11 @@ def display_embedding_hyperparameters():
     # Embedding model parameters
     with st.expander("Embedding Model Settings", expanded=False):
         register_widget("embedding_service_type")
+        # CHANGED: Default embedding service changed from "remote" to "local"
+        # This affects the user-facing default in the Weak Signals demo sidebar.
+        # When users first open the demo, local embeddings will be selected by default.
         if "embedding_service_type" not in st.session_state:
-            st.session_state["embedding_service_type"] = "remote"
+            st.session_state["embedding_service_type"] = "local"
         st.segmented_control(
             "Embedding service",
             selection_mode="single",

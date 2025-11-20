@@ -57,9 +57,12 @@ def _process_uploaded_files(
             with open(tmpdir + "/" + f.name, "wb") as tmp_file:
                 tmp_file.write(f.getvalue())
             if tmp_file is not None:
+                # CHANGED: Default language fallback changed from "French" to "Multilingual"
+                # This affects backend behavior when loading data if language is not set in session state.
+                # This ensures consistency with the new default language setting in the UI.
                 df = load_data(
                     Path(tmp_file.name),
-                    SessionStateManager.get("language", "French"),
+                    SessionStateManager.get("language", "Multilingual"),
                 )
                 if df is not None:
                     dataframes.append(df)
@@ -73,9 +76,12 @@ def _load_files(
     dfs = []
     for selected_file in files:
         file_path = DATA_PATH / selected_file
+        # CHANGED: Default language fallback changed from "French" to "Multilingual"
+        # This affects backend behavior when loading data if language is not set in session state.
+        # This ensures consistency with the new default language setting in the UI.
         df = load_data(
             file_path,
-            SessionStateManager.get("language", "French"),
+            SessionStateManager.get("language", "Multilingual"),
         )
         if df is not None:
             dfs.append(df)

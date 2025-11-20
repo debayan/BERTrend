@@ -2,7 +2,10 @@
 
 # Global parameters
 [global]
-language = "French"
+# CHANGED: Language changed from "French" to "multilingual" to align with default embedding settings
+# This affects stopword selection, vectorizer behavior, and BERTopic preprocessing.
+# For multilingual text, the system will use combined English and French stopwords.
+language = "multilingual"
 
 # BERTopic parameters: https://maartengr.github.io/BERTopic/api/bertopic.html#bertopic._bertopic.BERTopic.__init__
 [bertopic_model]
@@ -30,7 +33,7 @@ prediction_data = true
 
 # CountVectorizer: https://scikit-learn.org/1.5/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
 [vectorizer_model]
-ngram_range = [1, 1]
+ngram_range = [1, 2]
 stop_words = true # If true, will check `language` parameter and load associated stopwords file
 min_df = 2
 

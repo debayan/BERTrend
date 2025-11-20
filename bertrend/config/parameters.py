@@ -25,6 +25,11 @@ with open(common_ngrams_file, "r", encoding="utf-8") as file:
 
 STOPWORDS = STOP_WORDS_RTE + COMMON_NGRAMS + FRENCH_STOPWORDS
 
+# CHANGED: Added multilingual stopwords list combining English and French stopwords
+# This is used when language="multilingual" in BERTopic config to handle multilingual text processing.
+# Combines English and French stopwords along with common ngrams for comprehensive multilingual support.
+MULTILINGUAL_STOPWORDS = list(set(ENGLISH_STOPWORDS + FRENCH_STOPWORDS + COMMON_NGRAMS))
+
 # File names
 STATE_FILE = "app_state.pkl"
 EMBEDDINGS_FILE = "embeddings.npy"
