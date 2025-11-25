@@ -506,6 +506,83 @@ def analysis_page():
                         message_placeholder.markdown(full_response)
                     st.session_state[f"chat_history_{chat_topic_number}"].append({"role": "assistant", "content": full_response})
 
+            # Global Chat
+            with st.expander("Global Chat (All Clusters)", expanded=False):
+                st.subheader("Global Chat")
+
+                def generate_global_context(weak_df, strong_df):
+                    context = "Here is a summary of the latest trends across all topics:\n\n"
+                    
+                    if not strong_df.empty:
+                        context += "**Strong Signals (Established Trends):**\n"
+                        for _, row in strong_df.head(5).iterrows(): # Top 5
+                            context += f"- Topic {row['Topic']}: {row['Representation']}. (Popularity: {row['Latest_Popularity']:.2f})\n"
+                        context += "\n"
+
+                    if not weak_df.empty:
+                        context += "**Weak Signals (Emerging Trends):**\n"
+                        for _, row in weak_df.head(5).iterrows(): # Top 5
+                            context += f"- Topic {row['Topic']}: {row['Representation']}. (Popularity: {row['Latest_Popularity']:.2f})\n"
+                        context += "\n"
+                    
+                    if strong_df.empty and weak_df.empty:
+                        return "There are currently no significant trends detected."
+                        
+                    return context
+
+                if "global_chat_history" not in st.session_state:
+                    st.session_state.global_chat_history = []
+
+                for message in st.session_state.global_chat_history:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+                if prompt := st.chat_input("Ask about emerging trends..."):
+                    st.session_state.global_chat_history.append({"role": "user", "content": prompt})
+                    with st.chat_message("user"):
+                        st.markdown(prompt)
+
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        
+                        # Get context
+                        bertrend = SessionStateManager.get("bertrend")
+                        window_end = st.session_state.get("window_end")
+                        window_start = st.session_state.get("window_start")
+                        q1 = st.session_state.get("q1")
+                        q3 = st.session_state.get("q3")
+                        noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
+                            bertrend._classify_signals(window_start, window_end, q1, q3)
+                        )
+                        
+                        global_context = generate_global_context(weak_signal_topics_df, strong_signal_topics_df)
+                        
+                        system_prompt = f"You are a helpful assistant that can answer questions about emerging trends based on the provided summary.\n\n{global_context}"
+
+                        messages = [
+                            {"role": "system", "content": system_prompt}
+                        ] + st.session_state.global_chat_history
+                        
+                        try:
+                            llama3_client = Llama3Client(
+                                api_key=LLM_CONFIG["api_key"],
+                                endpoint=LLM_CONFIG["endpoint"],
+                                model=LLM_CONFIG["model"],
+                            )
+                            
+                            response = llama3_client.generate_from_history(
+                                messages,
+                                temperature=LLM_CONFIG["temperature"],
+                                max_output_tokens=LLM_CONFIG["max_output_tokens"],
+                            )
+                            full_response = response
+                            
+                        except Exception as e:
+                            full_response = f"Sorry, I encountered an error: {e}"
+                        
+                        message_placeholder.markdown(full_response)
+                    st.session_state.global_chat_history.append({"role": "assistant", "content": full_response})
+
             # Create the Sankey Diagram
             st.subheader("Topic Evolution")
             display_sankey_diagram(
