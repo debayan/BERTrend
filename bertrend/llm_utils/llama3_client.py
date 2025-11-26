@@ -198,11 +198,12 @@ class Llama3Client:
 
     def parse(
         self,
-        user_prompt: str,
+        user_prompt: Optional[str] = None,
         system_prompt: Optional[str] = None,
         response_format: Optional[type[BaseModel]] = None,
         temperature: Optional[float] = None,
         max_output_tokens: Optional[int] = None,
+        messages: Optional[list[dict]] = None,
         **kwargs
     ) -> Any:
         """Generate text using the Llama3 API and parse the response.
@@ -213,130 +214,134 @@ class Llama3Client:
             response_format (Optional[type[BaseModel]]): Optional Pydantic model to parse response into
             temperature (Optional[float]): Temperature for text generation (used in payload)
             max_output_tokens (Optional[int]): Maximum tokens to generate (used in payload)
+            messages (Optional[list[dict]]): Optional pre-formatted list of messages
             **kwargs: Additional arguments (ignored for compatibility)
 
         Returns:
             Any: The parsed response, either as a Pydantic model or raw text
         """
         try:
-            # Prepare the messages array
-            messages = []
+            if messages is None:
+                if user_prompt is None:
+                    raise ValueError("Either 'user_prompt' or 'messages' must be provided.")
+                # Prepare the messages array
+                messages = []
 
-            # Add system prompt for JSON formatting if response_format is specified
-            if response_format:
-                # MODIFICATION: Enhanced JSON formatting prompt for LLaMA 3 API with language awareness
-                # PURPOSE: Ensure LLaMA 3 returns properly structured JSON that matches Pydantic models
-                # Detect language from user prompt to provide appropriate system prompt
-                user_prompt_lower = user_prompt.lower()
-                
-                # German indicators (most common in your dataset)
-                german_indicators = [
-                    'deutsch', 'german', 'deutsche', 'deutschen', 'deutschland', 'deutschsprachig',
-                    'analyse', 'bewertung', 'signal', 'trends', 'tendenzen', 'entwicklung',
-                    'prognose', 'strategisch', 'elite', 'expertise', 'bereiche', 'branchen',
-                    'aufgabe', 'durchführung', 'vollständig', 'abgeleitet', 'zusammenfassung',
-                    'thema', 'nutzen', 'kenntnisse', 'fähigkeiten', 'analytisch', 'bereitstellung',
-                    'tiefgreifend', 'auswirkung', 'potenzial', 'evolution', 'implikationen',
-                    'kurz', 'lang', 'effekte', 'auswirkungen', 'möglich', 'folgen', 'zweiter',
-                    'ordnung', 'szenarien', 'entwickeln', 'manifestieren', 'zukunft', 'betrachten',
-                    'verschiedene', 'faktoren', 'könnten', 'beeinflussen', 'trajektorie', 'erkunden',
-                    'optimistisch', 'pessimistisch', 'interkonnexionen', 'synergien', 'identifizieren',
-                    'interagieren', 'andere', 'aktuelle', 'phänomene', 'emerging', 'diskutieren',
-                    'konflikte', 'systeme', 'paradigmen', 'existierende', 'treiber', 'inhibitoren',
-                    'analysieren', 'beschleunigen', 'verstärken', 'untersuchen', 'hindernisse',
-                    'widerstände', 'potenzielle', 'entwicklung', 'tiefgreifend', 'nuanciert',
-                    'gehen', 'über', 'oberflächliche', 'beobachtungen', 'stützen', 'insights',
-                    'erfassen', 'komplexität', 'bedeutung', 'zögern', 'nicht', 'machen',
-                    'vorhersagen', 'gut', 'begründet', 'trajektorie', 'konzentrieren', 'bereitstellung',
-                    'klare', 'einsichtsvoll', 'nutzbar', 'kann', 'erleuchten', 'entscheidung',
-                    'planung', 'zukunft', 'als', 'elite-strategieprognose-analyst', 'umfangreicher',
-                    'expertise', 'verschiedenen', 'bereichen', 'branchen', 'aufgabe', 'umfassende',
-                    'bewertung', 'potenziellen', 'signals', 'abgeleitet', 'folgenden', 'themenzusammenfassung',
-                    'nutzen', 'wissen', 'analytischen', 'fähigkeiten', 'tiefgreifende', 'analyse',
-                    'potenziellen', 'auswirkungen', 'entwicklung', 'signals', 'liefern'
-                ]
-                
-                # French indicators (fallback)
-                french_indicators = [
-                    'français', 'french', 'analyse', 'évaluation', 'signal', 'tendances',
-                    'prospective', 'stratégique', 'élite', 'expertise', 'domaines',
-                    'industries', 'tâche', 'mener', 'complète', 'dérivé', 'résumé',
-                    'sujet', 'utilisez', 'connaissances', 'compétences', 'analytiques',
-                    'fournir', 'approfondie', 'impact', 'potentiel', 'évolution'
-                ]
-                
-                # English indicators (fallback)
-                english_indicators = [
-                    'english', 'analysis', 'evaluation', 'signal', 'trends', 'strategic',
-                    'elite', 'expertise', 'domains', 'industries', 'task', 'conduct',
-                    'complete', 'derived', 'summary', 'subject', 'use', 'knowledge',
-                    'skills', 'analytical', 'provide', 'in-depth', 'impact', 'potential',
-                    'evolution', 'implications', 'short', 'term', 'long', 'effects',
-                    'possible', 'consequences', 'second', 'order', 'scenarios', 'develop',
-                    'manifest', 'future', 'consider', 'various', 'factors', 'could',
-                    'influence', 'trajectory', 'explore', 'optimistic', 'pessimistic',
-                    'interconnections', 'synergies', 'identify', 'interact', 'other',
-                    'current', 'phenomena', 'emerging', 'discuss', 'conflicts', 'systems',
-                    'paradigms', 'existing', 'drivers', 'inhibitors', 'analyze', 'accelerate',
-                    'amplify', 'examine', 'obstacles', 'resistances', 'hinder', 'development',
-                    'thorough', 'nuanced', 'beyond', 'surface-level', 'observations', 'draw',
-                    'insights', 'capture', 'complexity', 'importance', 'hesitate', 'make',
-                    'predictions', 'well-reasoned', 'trajectory', 'focus', 'providing',
-                    'clear', 'insightful', 'actionable', 'inform', 'decision-making', 'planning'
-                ]
-                
-                # Detect language with priority: German > French > English
-                is_german = any(word in user_prompt_lower for word in german_indicators)
-                is_french = any(word in user_prompt_lower for word in french_indicators)
-                is_english = any(word in user_prompt_lower for word in english_indicators)
-                
-                # Default to German if no clear language detected
-                detected_language = "german" if is_german else ("french" if is_french else ("english" if is_english else "german"))
-                
-                if detected_language == "german":
-                    json_system_prompt = f"""Sie sind ein hilfreicher Assistent, der IMMER im gültigen JSON-Format antwortet. 
-                    Ihre Antwort muss ein gültiges JSON-Objekt mit der exakt erforderlichen Struktur sein.
-                    Fügen Sie kein Markdown-Formatting, erklärenden Text oder zusätzlichen Inhalt hinzu.
-                    Geben Sie NUR das JSON-Objekt zurück.
+                # Add system prompt for JSON formatting if response_format is specified
+                if response_format:
+                    # MODIFICATION: Enhanced JSON formatting prompt for LLaMA 3 API with language awareness
+                    # PURPOSE: Ensure LLaMA 3 returns properly structured JSON that matches Pydantic models
+                    # Detect language from user prompt to provide appropriate system prompt
+                    user_prompt_lower = user_prompt.lower()
                     
-                    Für TopicSummaryList geben Sie zurück: {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
-                    Für SignalAnalysis geben Sie die vollständige JSON-Struktur mit allen erforderlichen Feldern zurück.
+                    # German indicators (most common in your dataset)
+                    german_indicators = [
+                        'deutsch', 'german', 'deutsche', 'deutschen', 'deutschland', 'deutschsprachig',
+                        'analyse', 'bewertung', 'signal', 'trends', 'tendenzen', 'entwicklung',
+                        'prognose', 'strategisch', 'elite', 'expertise', 'bereiche', 'branchen',
+                        'aufgabe', 'durchführung', 'vollständig', 'abgeleitet', 'zusammenfassung',
+                        'thema', 'nutzen', 'kenntnisse', 'fähigkeiten', 'analytisch', 'bereitstellung',
+                        'tiefgreifend', 'auswirkung', 'potenzial', 'evolution', 'implikationen',
+                        'kurz', 'lang', 'effekte', 'auswirkungen', 'möglich', 'folgen', 'zweiter',
+                        'ordnung', 'szenarien', 'entwickeln', 'manifestieren', 'zukunft', 'betrachten',
+                        'verschiedene', 'faktoren', 'könnten', 'beeinflussen', 'trajektorie', 'erkunden',
+                        'optimistisch', 'pessimistisch', 'interkonnexionen', 'synergien', 'identifizieren',
+                        'interagieren', 'andere', 'aktuelle', 'phänomene', 'emerging', 'diskutieren',
+                        'konflikte', 'systeme', 'paradigmen', 'existierende', 'treiber', 'inhibitoren',
+                        'analysieren', 'beschleunigen', 'verstärken', 'untersuchen', 'hindernisse',
+                        'widerstände', 'potenzielle', 'entwicklung', 'tiefgreifend', 'nuanciert',
+                        'gehen', 'über', 'oberflächliche', 'beobachtungen', 'stützen', 'insights',
+                        'erfassen', 'komplexität', 'bedeutung', 'zögern', 'nicht', 'machen',
+                        'vorhersagen', 'gut', 'begründet', 'trajektorie', 'konzentrieren', 'bereitstellung',
+                        'klare', 'einsichtsvoll', 'nutzbar', 'kann', 'erleuchten', 'entscheidung',
+                        'planung', 'zukunft', 'als', 'elite-strategieprognose-analyst', 'umfangreicher',
+                        'expertise', 'verschiedenen', 'bereichen', 'branchen', 'aufgabe', 'umfassende',
+                        'bewertung', 'potenziellen', 'signals', 'abgeleitet', 'folgenden', 'themenzusammenfassung',
+                        'nutzen', 'wissen', 'analytischen', 'fähigkeiten', 'tiefgreifende', 'analyse',
+                        'potenziellen', 'auswirkungen', 'entwicklung', 'signals', 'liefern'
+                    ]
                     
-                    WICHTIG: Ihre Antwort muss analysierbares JSON sein, nicht Markdown oder ein anderes Format.
+                    # French indicators (fallback)
+                    french_indicators = [
+                        'français', 'french', 'analyse', 'évaluation', 'signal', 'tendances',
+                        'prospective', 'stratégique', 'élite', 'expertise', 'domaines',
+                        'industries', 'tâche', 'mener', 'complète', 'dérivé', 'résumé',
+                        'sujet', 'utilisez', 'connaissances', 'compétences', 'analytiques',
+                        'fournir', 'approfondie', 'impact', 'potentiel', 'évolution'
+                    ]
+                    
+                    # English indicators (fallback)
+                    english_indicators = [
+                        'english', 'analysis', 'evaluation', 'signal', 'trends', 'strategic',
+                        'elite', 'expertise', 'domains', 'industries', 'task', 'conduct',
+                        'complete', 'derived', 'summary', 'subject', 'use', 'knowledge',
+                        'skills', 'analytical', 'provide', 'in-depth', 'impact', 'potential',
+                        'evolution', 'implications', 'short', 'term', 'long', 'effects',
+                        'possible', 'consequences', 'second', 'order', 'scenarios', 'develop',
+                        'manifest', 'future', 'consider', 'various', 'factors', 'could',
+                        'influence', 'trajectory', 'explore', 'optimistic', 'pessimistic',
+                        'interconnections', 'synergies', 'identify', 'interact', 'other',
+                        'current', 'phenomena', 'emerging', 'discuss', 'conflicts', 'systems',
+                        'paradigms', 'existing', 'drivers', 'inhibitors', 'analyze', 'accelerate',
+                        'amplify', 'examine', 'obstacles', 'resistances', 'hinder', 'development',
+                        'thorough', 'nuanced', 'beyond', 'surface-level', 'observations', 'draw',
+                        'insights', 'capture', 'complexity', 'importance', 'hesitate', 'make',
+                        'predictions', 'well-reasoned', 'trajectory', 'focus', 'providing',
+                        'clear', 'insightful', 'actionable', 'inform', 'decision-making', 'planning'
+                    ]
+                    
+                    # Detect language with priority: German > French > English
+                    is_german = any(word in user_prompt_lower for word in german_indicators)
+                    is_french = any(word in user_prompt_lower for word in french_indicators)
+                    is_english = any(word in user_prompt_lower for word in english_indicators)
+                    
+                    # Default to German if no clear language detected
+                    detected_language = "german" if is_german else ("french" if is_french else ("english" if is_english else "german"))
+                    
+                    if detected_language == "german":
+                        json_system_prompt = f"""Sie sind ein hilfreicher Assistent, der IMMER im gültigen JSON-Format antwortet. 
+                        Ihre Antwort muss ein gültiges JSON-Objekt mit der exakt erforderlichen Struktur sein.
+                        Fügen Sie kein Markdown-Formatting, erklärenden Text oder zusätzlichen Inhalt hinzu.
+                        Geben Sie NUR das JSON-Objekt zurück.
+                        
+                        Für TopicSummaryList geben Sie zurück: {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
+                        Für SignalAnalysis geben Sie die vollständige JSON-Struktur mit allen erforderlichen Feldern zurück.
+                        
+                        WICHTIG: Ihre Antwort muss analysierbares JSON sein, nicht Markdown oder ein anderes Format.
 
-                    Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
-                elif detected_language == "french":
-                    json_system_prompt = f"""Vous êtes un assistant utile qui répond TOUJOURS en format JSON valide. 
-                    Votre réponse doit être un objet JSON valide avec la structure exacte requise.
-                    N'incluez aucun formatage markdown, texte explicatif ou contenu supplémentaire.
-                    Retournez UNIQUEMENT l'objet JSON.
-                    
-                    Pour TopicSummaryList, retournez : {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
-                    Pour SignalAnalysis, retournez la structure JSON complète avec tous les champs requis.
-                    
-                    IMPORTANT : Votre réponse doit être du JSON analysable, pas du markdown ou tout autre format.
+                        Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
+                    elif detected_language == "french":
+                        json_system_prompt = f"""Vous êtes un assistant utile qui répond TOUJOURS en format JSON valide. 
+                        Votre réponse doit être un objet JSON valide avec la structure exacte requise.
+                        N'incluez aucun formatage markdown, texte explicatif ou contenu supplémentaire.
+                        Retournez UNIQUEMENT l'objet JSON.
+                        
+                        Pour TopicSummaryList, retournez : {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
+                        Pour SignalAnalysis, retournez la structure JSON complète avec tous les champs requis.
+                        
+                        IMPORTANT : Votre réponse doit être du JSON analysable, pas du markdown ou tout autre format.
 
-                    Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
-                else:  # English or default
-                    json_system_prompt = f"""You are a helpful assistant that ALWAYS responds in valid JSON format. 
-                    Your response must be a valid JSON object with the exact structure required.
-                    Do not include any markdown formatting, explanatory text, or additional content.
-                    Return ONLY the JSON object.
-                    
-                    For TopicSummaryList, return: {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
-                    For SignalAnalysis, return the complete JSON structure with all required fields.
-                    
-                    IMPORTANT: Your response must be parseable JSON, not markdown or any other format.
+                        Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
+                    else:  # English or default
+                        json_system_prompt = f"""You are a helpful assistant that ALWAYS responds in valid JSON format. 
+                        Your response must be a valid JSON object with the exact structure required.
+                        Do not include any markdown formatting, explanatory text, or additional content.
+                        Return ONLY the JSON object.
+                        
+                        For TopicSummaryList, return: {{"topic_summary_by_time_period": [{{"title": "...", "date": "...", "key_developments": [...], "description": "...", "novelty": "..."}}]}}
+                        For SignalAnalysis, return the complete JSON structure with all required fields.
+                        
+                        IMPORTANT: Your response must be parseable JSON, not markdown or any other format.
 
-                    Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
-                messages.append({"role": "system", "content": json_system_prompt})
+                        Please ensure the final combined summary remains concise and within 8,000 characters while preserving the most critical information and key developments. If the original content is repetitive or contains redundant segments, merge related points intelligently before summarizing. The summary must remain in the same language as the source text."""
+                    messages.append({"role": "system", "content": json_system_prompt})
 
-            # Add user's system prompt if provided
-            if system_prompt:
-                messages.append({"role": "system", "content": system_prompt})
+                # Add user's system prompt if provided
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
 
-            # Add the user prompt
-            messages.append({"role": "user", "content": user_prompt})
+                # Add the user prompt
+                messages.append({"role": "user", "content": user_prompt})
 
             # MODIFICATION: Use provided temperature and max_output_tokens parameters
             # PURPOSE: Enable compatibility with OpenAI_Client interface parameters
@@ -1057,24 +1062,12 @@ class Llama3Client:
             str: The generated text response
         """
         try:
-            # Extract the last user message and any system prompts
-            user_prompt = ""
-            system_prompt = None
-            
-            for message in messages:
-                if message.get("role") == "user":
-                    user_prompt = message.get("content", "")
-                elif message.get("role") == "system" and system_prompt is None:
-                    system_prompt = message.get("content", "")
-            
-            if not user_prompt:
-                raise ValueError("No user message found in conversation history")
-            
-            return self.generate(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
+            # Use the existing parse method but return only the text
+            result = self.parse(
+                messages=messages,
                 **kwargs
             )
+            return result if isinstance(result, str) else str(result)
         except Exception as e:
             logger.error(f"Error in generate_from_history method: {str(e)}")
             raise

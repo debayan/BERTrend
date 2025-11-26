@@ -49,6 +49,8 @@ from bertrend.demos.demos_utils.parameters_component import (
     display_embedding_hyperparameters,
 )
 from bertrend.BERTopicModel import BERTopicModel
+from bertrend.llm_utils.llama3_client import Llama3Client
+from bertrend import LLM_CONFIG
 from bertrend.demos.weak_signals.messages import (
     MODEL_MERGING_COMPLETE_MESSAGE,
     NO_CACHE_WARNING,
@@ -431,6 +433,155 @@ def analysis_page():
                             f"{SIGNAL_ANALYSIS_ERROR} Error: {str(e)}",
                             icon=ERROR_ICON,
                         )
+
+            # Chat
+            with st.expander("Chat", expanded=True):
+                st.subheader("Chat")
+                chat_topic_number = st.number_input(
+                    "Enter a topic number to chat about:", min_value=0, step=1, key="chat_topic_number"
+                )
+
+                if f"chat_history_{chat_topic_number}" not in st.session_state:
+                    st.session_state[f"chat_history_{chat_topic_number}"] = []
+
+                for message in st.session_state[f"chat_history_{chat_topic_number}"]:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+                if prompt := st.chat_input("What is up?"):
+                    st.session_state[f"chat_history_{chat_topic_number}"].append({"role": "user", "content": prompt})
+                    with st.chat_message("user"):
+                        st.markdown(prompt)
+
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        full_response = ""
+                        
+                        # Get context for the topic
+                        bertrend = SessionStateManager.get("bertrend")
+                        topic_merge_rows = bertrend.all_merge_histories_df[
+                            bertrend.all_merge_histories_df["Topic1"] == chat_topic_number
+                        ].sort_values("Timestamp")
+                        
+                        content_summary = "\n".join(
+                            [
+                                f"Timestamp: {row.Timestamp.strftime('%Y-%m-%d')}\n"
+                                f"Topic representation: {row.Representation1}\n"
+                                f"{' '.join(f'- {doc}' for doc in row.Documents1 if isinstance(doc, str))}\n"
+                                f"Timestamp: {(row.Timestamp + pd.Timedelta(days=bertrend.config['granularity'])).strftime('%Y-%m-%d')}\n"
+                                f"Topic representation: {row.Representation2}\n"
+                                f"{' '.join(f'- {doc}' for doc in row.Documents2 if isinstance(doc, str))}\n"
+                                for row in topic_merge_rows.itertuples()
+                            ]
+                        )
+
+                        # Truncate context to avoid errors
+                        max_content_length = 8000
+                        if len(content_summary) > max_content_length:
+                            content_summary = content_summary[:max_content_length] + "\n\n[Context truncated due to length]"
+                        
+                        system_prompt = f"You are a helpful assistant. The user wants to chat about topic number {chat_topic_number}. Here is some context about the topic:\n{content_summary}"
+
+                        messages=[
+                                {"role": "system", "content": system_prompt}
+                            ] + st.session_state[f"chat_history_{chat_topic_number}"]
+                        
+                        try:
+                            llama3_client = Llama3Client(
+                                api_key=LLM_CONFIG["api_key"],
+                                endpoint=LLM_CONFIG["endpoint"],
+                                model=LLM_CONFIG["model"],
+                            )
+                            
+                            response = llama3_client.generate_from_history(
+                                messages,
+                                temperature=LLM_CONFIG["temperature"],
+                                max_output_tokens=LLM_CONFIG["max_output_tokens"],
+                            )
+                            full_response = response
+                            
+                        except Exception as e:
+                            full_response = f"Sorry, I encountered an error: {e}"
+                        
+                        message_placeholder.markdown(full_response)
+                    st.session_state[f"chat_history_{chat_topic_number}"].append({"role": "assistant", "content": full_response})
+
+            # Global Chat
+            with st.expander("Global Chat (All Clusters)", expanded=False):
+                st.subheader("Global Chat")
+
+                def generate_global_context(weak_df, strong_df):
+                    context = "Here is a summary of the latest trends across all topics:\n\n"
+                    
+                    if not strong_df.empty:
+                        context += "**Strong Signals (Established Trends):**\n"
+                        for _, row in strong_df.head(5).iterrows(): # Top 5
+                            context += f"- Topic {row['Topic']}: {row['Representation']}. (Popularity: {row['Latest_Popularity']:.2f})\n"
+                        context += "\n"
+
+                    if not weak_df.empty:
+                        context += "**Weak Signals (Emerging Trends):**\n"
+                        for _, row in weak_df.head(5).iterrows(): # Top 5
+                            context += f"- Topic {row['Topic']}: {row['Representation']}. (Popularity: {row['Latest_Popularity']:.2f})\n"
+                        context += "\n"
+                    
+                    if strong_df.empty and weak_df.empty:
+                        return "There are currently no significant trends detected."
+                        
+                    return context
+
+                if "global_chat_history" not in st.session_state:
+                    st.session_state.global_chat_history = []
+
+                for message in st.session_state.global_chat_history:
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+
+                if prompt := st.chat_input("Ask about emerging trends..."):
+                    st.session_state.global_chat_history.append({"role": "user", "content": prompt})
+                    with st.chat_message("user"):
+                        st.markdown(prompt)
+
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        
+                        # Get context
+                        bertrend = SessionStateManager.get("bertrend")
+                        window_end = st.session_state.get("window_end")
+                        window_start = st.session_state.get("window_start")
+                        q1 = st.session_state.get("q1")
+                        q3 = st.session_state.get("q3")
+                        noise_topics_df, weak_signal_topics_df, strong_signal_topics_df = (
+                            bertrend._classify_signals(window_start, window_end, q1, q3)
+                        )
+                        
+                        global_context = generate_global_context(weak_signal_topics_df, strong_signal_topics_df)
+                        
+                        system_prompt = f"You are a helpful assistant that can answer questions about emerging trends based on the provided summary.\n\n{global_context}"
+
+                        messages = [
+                            {"role": "system", "content": system_prompt}
+                        ] + st.session_state.global_chat_history
+                        
+                        try:
+                            llama3_client = Llama3Client(
+                                api_key=LLM_CONFIG["api_key"],
+                                endpoint=LLM_CONFIG["endpoint"],
+                                model=LLM_CONFIG["model"],
+                            )
+                            
+                            response = llama3_client.generate_from_history(
+                                messages,
+                                temperature=LLM_CONFIG["temperature"],
+                                max_output_tokens=LLM_CONFIG["max_output_tokens"],
+                            )
+                            full_response = response
+                            
+                        except Exception as e:
+                            full_response = f"Sorry, I encountered an error: {e}"
+                        
+                        message_placeholder.markdown(full_response)
+                    st.session_state.global_chat_history.append({"role": "assistant", "content": full_response})
 
             # Create the Sankey Diagram
             st.subheader("Topic Evolution")
