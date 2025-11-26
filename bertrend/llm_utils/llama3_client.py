@@ -1,3 +1,4 @@
+import os
 import requests
 from typing import Any, Optional
 from pydantic import BaseModel
@@ -183,7 +184,19 @@ class Llama3Client:
             self.api_endpoint = endpoint.lstrip("/")
         
         self.username = username if username else api_key
-        self.password = password if password else "Nr17TT5m8Qj1oHS1"  # Default password from config
+        # Load password from environment variable if not provided
+        if not password:
+            password = os.getenv("LLAMA3_API_PASSWORD")
+            if not password:
+                logger.warning(
+                    "LLAMA3_API_PASSWORD environment variable not set. "
+                    "Please set it before using Llama3Client."
+                )
+                raise EnvironmentError(
+                    "LLAMA3_API_PASSWORD environment variable not found. "
+                    "Please set it before using Llama3Client."
+                )
+        self.password = password
         self.model_name = model
         self.session = requests.Session()
         self.session.auth = (self.username, self.password)
