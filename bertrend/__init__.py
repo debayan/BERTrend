@@ -25,6 +25,9 @@ SERVICES_CONFIG = load_toml_config(SERVICES_DEFAULT_CONFIG_PATH)
 
 EMBEDDING_CONFIG = SERVICES_CONFIG["embedding_service"]
 LLM_CONFIG = SERVICES_CONFIG["llm_service"]
+# Handle default value for api_key if environment variable is not set
+if LLM_CONFIG.get("api_key") == "${LLM_API_KEY}":
+    LLM_CONFIG["api_key"] = os.getenv("LLM_API_KEY", "llm-chat-user")
 
 # Linux command to find the index of the GPU device currently less used than the others
 BEST_CUDA_DEVICE = (
