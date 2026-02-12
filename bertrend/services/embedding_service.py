@@ -165,10 +165,11 @@ class EmbeddingService(BaseEmbedder):
             logger.info(f"Loading embedding model: {self.embedding_model_name}...")
             # Load the embedding model
             self.embedding_model = SentenceTransformer(
-                self.embedding_model_name,
-                device=embedding_device,
-                trust_remote_code=True,
-                model_kwargs=model_kwargs,
+            self.embedding_model_name,
+            device=embedding_device,
+            trust_remote_code=True,
+            model_kwargs=model_kwargs,
+            cache_folder=os.path.expanduser("~/.cache/sentence_transformers"),
             )
             self.embedding_model.max_seq_length = max_seq_length
             self.batch_size = batch_size
