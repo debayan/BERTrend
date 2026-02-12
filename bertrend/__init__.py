@@ -35,12 +35,34 @@ BEST_CUDA_DEVICE = (
     "| head -n 1 | cut -d',' -f1\`"
 )
 
+# BERTREND_BASE_DIR = os.getenv("BERTREND_BASE_DIR", None)
+# BASE_PATH = (
+#     Path(BERTREND_BASE_DIR)
+#     if BERTREND_BASE_DIR
+#     else Path(__file__).parent.parent.parent
+# )
+
 BERTREND_BASE_DIR = os.getenv("BERTREND_BASE_DIR", None)
-BASE_PATH = (
-    Path(BERTREND_BASE_DIR)
-    if BERTREND_BASE_DIR
-    else Path(__file__).parent.parent.parent
-)
+
+# bertrend/__init__.py lives at <repo_root>/bertrend/__init__.py
+_DEFAULT_BASE_PATH = Path(__file__).resolve().parents[1]
+
+if BERTREND_BASE_DIR:
+    _candidate = Path(BERTREND_BASE_DIR).expanduser().resolve()
+
+    # Safety: avoid cross repo writes when multiple checkouts exist.
+    # Only allow an override that is the same as the imported package's repo root
+    # or a subdirectory of it.
+    if _candidate != _DEFAULT_BASE_PATH and _DEFAULT_BASE_PATH not in _candidate.parents:
+        raise RuntimeError(
+            f"BERTREND_BASE_DIR={_candidate} conflicts with imported bertrend base={_DEFAULT_BASE_PATH}. "
+            "Refusing to use a base directory outside this checkout."
+        )
+
+    BASE_PATH = _candidate
+else:
+    BASE_PATH = _DEFAULT_BASE_PATH
+
 
 # Base dirs
 DATA_PATH = BASE_PATH / "data"
